@@ -49,6 +49,8 @@ interface IVectors<T> {
   dot(v: T): number;
   /** Копия вектора */
   copy(): T;
+  /** Копия вектора */
+  clone(): T;
   /** Вектор с абсолютными значениями элементов */
   abs(): T;
   /** Вектор с целыми частями элементов */
@@ -337,6 +339,8 @@ export class Vec4 implements IVectors<Vec4> {
   dot(v: Vec4): number { return this.x*v.x + this.y*v.y + this.z*v.z + this.w*v.w; }
 
   copy(): Vec4 { return new Vec4(this.x, this.y, this.z, this.w); }
+
+  clone(): Vec4 { return new Vec4(this.x, this.y, this.z, this.w); }
 
   abs(): Vec4 { return new Vec4(Math.abs(this.x), Math.abs(this.y), Math.abs(this.z), Math.abs(this.w)); }
 
@@ -1025,6 +1029,8 @@ export class Vec3 implements IVectors<Vec3> {
 
   copy(): Vec3 { return new Vec3(this.x, this.y, this.z); }
 
+  clone(): Vec3 { return new Vec3(this.x, this.y, this.z); }
+
   abs(): Vec3 { return new Vec3(Math.abs(this.x), Math.abs(this.y), Math.abs(this.z)); }
 
   floor(): Vec3 { return new Vec3(Math.floor(this.x), Math.floor(this.y), Math.floor(this.z)); }
@@ -1359,6 +1365,8 @@ export class Vec2 implements IVectors<Vec2> {
   dot(v: Vec2): number { return this.x*v.x + this.y*v.y; }
 
   copy(): Vec2 { return new Vec2(this.x, this.y); }
+
+  clone(): Vec2 { return new Vec2(this.x, this.y); }
 
   abs(): Vec2 { return new Vec2(Math.abs(this.x), Math.abs(this.y)) }
 
