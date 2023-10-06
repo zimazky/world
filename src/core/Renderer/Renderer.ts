@@ -45,7 +45,7 @@ export default class Renderer {
     this.device = device
   }
 
-  async addPipeline(pipeline: IPipeline) {
+  async addPipelineAsync(pipeline: IPipeline) {
     this.pipelines.push(pipeline)
     await pipeline.initialize(this.device)
   }

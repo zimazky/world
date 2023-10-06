@@ -12,8 +12,12 @@ export default class App {
   /** Счетчик кадров */
   frame: number = 0
 
+  /** Информационный блок */
   divinfo: HTMLElement
+  /** Время, когда должен обновиться информационный блок */
   infoRefreshTime = 0
+  /** Признак запущенного цикла анимации */
+  running: boolean = false
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
@@ -32,33 +36,30 @@ export default class App {
     this.renderer = new Renderer(this.canvas)
     await this.renderer.initialize()
     const pipeline = new APipeline(this.renderer.format)
-    await this.renderer.addPipeline(pipeline)
+    await this.renderer.addPipelineAsync(pipeline)
 
 
     this.startTime = this.currentTime = performance.now()/1000.
   }
 
   run = () => {
-    var running = true
-
     const lCurrentTime = performance.now()/1000.
     const time = lCurrentTime - this.startTime
     const dt = lCurrentTime - this.currentTime
     this.currentTime = lCurrentTime
     this.frame++
 
-    //if(time>this.infoRefreshTime) {
+    if(time>this.infoRefreshTime) {
       this.divinfo.innerText = 
-        //`dt: ${dt.toFixed(2)} fps: ${(1000/dt).toFixed(2)} 
-        `${this.canvas.width} x ${this.canvas.height}`
+        `dt: ${dt.toFixed(2)} fps: ${(1000/dt).toFixed(2)} 
+        ${this.canvas.width} x ${this.canvas.height}`
       this.infoRefreshTime = time + 0.5
-    //}
+    }
 
     this.renderer.render()
-/*
-    if(running) {
+
+    if(this.running) {
         requestAnimationFrame(this.run)
     }
-*/
   }
 }
