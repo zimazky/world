@@ -1,3 +1,4 @@
+import APipeline from 'src/pipelines/APipeline/APipeline'
 import Renderer from 'src/core/Renderer/Renderer'
 import { initKeyBuffer } from 'src/shared/libs/Keyboard'
 
@@ -13,7 +14,6 @@ export default class App {
 
   divinfo: HTMLElement
   infoRefreshTime = 0
-
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
@@ -31,9 +31,11 @@ export default class App {
   async initialize() {
     this.renderer = new Renderer(this.canvas)
     await this.renderer.initialize()
+    const pipeline = new APipeline(this.renderer.format)
+    await this.renderer.addPipeline(pipeline)
+
+
     this.startTime = this.currentTime = performance.now()/1000.
-
-
   }
 
   run = () => {

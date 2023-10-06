@@ -1,9 +1,12 @@
-import Pipeline from './Pipeline'
+import IPipeline from './IPipeline'
 
 export default class Renderer {
+
+  format: GPUTextureFormat
+
   private context: GPUCanvasContext
   private device!: GPUDevice
-  private pipeline!: Pipeline
+  private pipelines: IPipeline[] = []
 
   constructor(canvas: HTMLCanvasElement) {
     const context = canvas.getContext('webgpu')
@@ -13,13 +16,38 @@ export default class Renderer {
       throw new Error(msg)
     }
     this.context = context
+    this.format = navigator.gpu.getPreferredCanvasFormat()
   }
 
   async initialize() {
-    const {device, format} = await initWebGPU(this.context)
+    const adapter = await navigator.gpu.requestAdapter({
+      powerPreference: 'high-performance'
+    })
+    if(!adapter) {
+      const msg = 'No adapter found'
+      alert(msg)
+      throw new Error(msg)
+    }
+    const device = await adapter.requestDevice({
+      // можем подключить расширения
+      requiredFeatures: [
+        //'texture-compression-bc'
+      ],
+      // можем изменить ограничения
+      requiredLimits: {
+        //maxStorageBufferBindingSize: adapter.limits.maxStorageBufferBindingSize
+      }
+    })
+    this.context.configure({ device, format: this.format })
+    //console.log(adapter)
+    //console.log(this.device)
+    //adapter.features.forEach(f=>console.log(f))
     this.device = device
-    this.pipeline = new Pipeline(device, format)
-    await this.pipeline.initialize()
+  }
+
+  async addPipeline(pipeline: IPipeline) {
+    this.pipelines.push(pipeline)
+    await pipeline.initialize(this.device)
   }
 
   public render() {
@@ -36,36 +64,11 @@ export default class Renderer {
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
     
     // todo: draw
-    this.pipeline.draw(passEncoder)
+    this.pipelines.forEach(p=>p.draw(passEncoder))
     passEncoder.end()
 
     this.device.queue.submit([commandEncoder.finish()])
   }
+  
 }
 
-async function initWebGPU(context: GPUCanvasContext): Promise<{device: GPUDevice, format: GPUTextureFormat}> {
-  const adapter = await navigator.gpu.requestAdapter({
-    powerPreference: 'high-performance'
-  })
-  if(!adapter) {
-    const msg = 'No adapter found'
-    alert(msg)
-    throw new Error(msg)
-  }
-  const device = await adapter.requestDevice({
-    // можем подключить расширения
-    requiredFeatures: [
-      //'texture-compression-bc'
-    ],
-    // можем изменить ограничения
-    requiredLimits: {
-      //maxStorageBufferBindingSize: adapter.limits.maxStorageBufferBindingSize
-    }
-  })
-  const format = navigator.gpu.getPreferredCanvasFormat()
-  context.configure({ device, format })
-  //console.log(adapter)
-  //console.log(this.device)
-  //adapter.features.forEach(f=>console.log(f))
-  return {device, format}
-}
