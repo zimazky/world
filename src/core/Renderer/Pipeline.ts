@@ -1,48 +1,31 @@
 import aShader from 'src/shaders/a.wgsl'
-import QuadGeometry from '../Geometry/QuadGeometry'
 import Texture from './Texture'
 import BufferUtils from './BufferUtils'
+import QuadGeometry from '../Geometry/QuadGeometry'
 
-export default class Renderer {
-  private context: GPUCanvasContext
-  private device!: GPUDevice
-  private format!: GPUTextureFormat
+export default class Pipeline {
+  private device: GPUDevice
+  private format: GPUTextureFormat
   private pipeline!: GPURenderPipeline
+
+  private textureBindGroup!: GPUBindGroup
+  private testTexture!: Texture
+
   private positionsBuffer!: GPUBuffer
   private colorsBuffer!: GPUBuffer
   private texCoordsBuffer!: GPUBuffer
   private indexBuffer!: GPUBuffer
-  private textureBindGroup!: GPUBindGroup
 
-  private testTexture!: Texture
 
-  constructor(canvas: HTMLCanvasElement) {
-    const context = canvas.getContext('webgpu')
-    if(!context) {
-      const msg = 'WebGPU not supported'
-      alert(msg)
-      throw new Error(msg)
-    }
-    this.context = context
-  }
 
-  async initialize() {
-    const {device, format} = await initWebGPU(this.context)
+  constructor(device: GPUDevice, format: GPUTextureFormat) {
     this.device = device
     this.format = format
-
-    this.testTexture = await Texture.createTextureFromUrl(this.device, 'assets/cat-head.jpg')
-    await this.initPipeline()
-
-    const geometry = new QuadGeometry()
-
-    this.positionsBuffer = BufferUtils.createVertexBuffer(this.device, new Float32Array(geometry.positions))
-    this.colorsBuffer = BufferUtils.createVertexBuffer(this.device, new Float32Array(geometry.colors))
-    this.texCoordsBuffer = BufferUtils.createVertexBuffer(this.device, new Float32Array(geometry.texCoords))
-    this.indexBuffer = BufferUtils.createIndexBuffer(this.device, new Uint16Array(geometry.indices))
   }
 
-  private async initPipeline() {
+  async init() {
+    this.testTexture = await Texture.createTextureFromUrl(this.device, 'assets/cat-head.jpg')
+
     const shaderModule = this.device.createShaderModule({
       code: aShader
     })
@@ -131,22 +114,17 @@ export default class Renderer {
       },
       layout: pipelineLayout
     })
+
+
+    const geometry = new QuadGeometry()
+
+    this.positionsBuffer = BufferUtils.createVertexBuffer(this.device, new Float32Array(geometry.positions))
+    this.colorsBuffer = BufferUtils.createVertexBuffer(this.device, new Float32Array(geometry.colors))
+    this.texCoordsBuffer = BufferUtils.createVertexBuffer(this.device, new Float32Array(geometry.texCoords))
+    this.indexBuffer = BufferUtils.createIndexBuffer(this.device, new Uint16Array(geometry.indices))
   }
 
-  public render() {
-    const commandEncoder = this.device.createCommandEncoder()
-    const textureView = this.context.getCurrentTexture().createView()
-    const renderPassDescriptor: GPURenderPassDescriptor = {
-      colorAttachments: [{
-        view: textureView,
-        clearValue: { r: 0, g: 0, b: 0, a: 1},
-        loadOp: 'clear',
-        storeOp: 'store'
-      }]
-    }
-    const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
-    
-    // todo: draw
+  draw(passEncoder: GPURenderPassEncoder) {
     passEncoder.setPipeline(this.pipeline)
     passEncoder.setIndexBuffer(this.indexBuffer, 'uint16')
     passEncoder.setVertexBuffer(0, this.positionsBuffer)
@@ -154,37 +132,6 @@ export default class Renderer {
     passEncoder.setVertexBuffer(2, this.texCoordsBuffer)
     passEncoder.setBindGroup(0, this.textureBindGroup)
     passEncoder.drawIndexed(6)
-    passEncoder.end()
-
-    this.device.queue.submit([commandEncoder.finish()])
   }
 
-}
-
-
-async function initWebGPU(context: GPUCanvasContext): Promise<{device: GPUDevice, format: GPUTextureFormat}> {
-  const adapter = await navigator.gpu.requestAdapter({
-    powerPreference: 'high-performance'
-  })
-  if(!adapter) {
-    const msg = 'No adapter found'
-    alert(msg)
-    throw new Error(msg)
-  }
-  const device = await adapter.requestDevice({
-    // можем подключить расширения
-    requiredFeatures: [
-      //'texture-compression-bc'
-    ],
-    // можем изменить ограничения
-    requiredLimits: {
-      //maxStorageBufferBindingSize: adapter.limits.maxStorageBufferBindingSize
-    }
-  })
-  const format = navigator.gpu.getPreferredCanvasFormat()
-  context.configure({ device, format })
-  //console.log(adapter)
-  //console.log(this.device)
-  //adapter.features.forEach(f=>console.log(f))
-  return {device, format}
 }

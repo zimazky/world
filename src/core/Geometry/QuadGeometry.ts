@@ -2,6 +2,7 @@ export default class QuadGeometry {
   public positions: number[]
   public colors: number[]
   public texCoords: number[]
+  public indices: number[]
 
   constructor() {
     this.positions = [
@@ -17,10 +18,14 @@ export default class QuadGeometry {
       1, 1, 0
     ]
     this.texCoords = [
-      0, 0,
-      1, 0,
       0, 1,
-      1, 1
+      1, 1,
+      0, 0,
+      1, 0
+    ]
+    this.indices = [
+      0, 1, 2,
+      1, 2, 3
     ]
 
   }
