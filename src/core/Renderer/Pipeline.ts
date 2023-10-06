@@ -2,8 +2,9 @@ import aShader from 'src/shaders/a.wgsl'
 import Texture from './Texture'
 import BufferUtils from './BufferUtils'
 import QuadGeometry from '../Geometry/QuadGeometry'
+import IPipeline from './IPipeline'
 
-export default class Pipeline {
+export default class Pipeline implements IPipeline{
   private device: GPUDevice
   private format: GPUTextureFormat
   private pipeline!: GPURenderPipeline
@@ -16,14 +17,12 @@ export default class Pipeline {
   private texCoordsBuffer!: GPUBuffer
   private indexBuffer!: GPUBuffer
 
-
-
   constructor(device: GPUDevice, format: GPUTextureFormat) {
     this.device = device
     this.format = format
   }
 
-  async init() {
+  async initialize() {
     this.testTexture = await Texture.createTextureFromUrl(this.device, 'assets/cat-head.jpg')
 
     const shaderModule = this.device.createShaderModule({
