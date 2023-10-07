@@ -1,8 +1,11 @@
-export function loadImage(src: string): Promise<HTMLImageElement> {
+export function loadImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject();
-    img.src = src;
-  });
+    const image = new Image()
+    image.onload = () => resolve(image);
+    image.onerror = () => {
+      console.error(`Failed to load image ${url}`)
+      reject()
+    }
+    image.src = url
+  })
 }

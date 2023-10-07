@@ -1,5 +1,5 @@
 import APipeline from 'src/pipelines/APipeline/APipeline'
-import Renderer from 'src/core/Renderer/Renderer'
+import { Renderer } from 'src/core/Renderer'
 import { initKeyBuffer } from 'src/shared/libs/Keyboard'
 
 export default class App {

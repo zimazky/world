@@ -1,8 +1,7 @@
 import aShader from 'src/shaders/a.wgsl'
-import Texture from 'src/core/Renderer/Texture'
-import BufferUtils from 'src/core/Renderer/BufferUtils'
 import QuadGeometry from './QuadGeometry'
-import IPipeline from 'src/core/Renderer/IPipeline'
+import { IPipeline, Renderer } from 'src/core/Renderer'
+import { loadImage } from 'src/shared/utils/loadimg'
 
 export default class APipeline implements IPipeline{
   private device!: GPUDevice
@@ -10,7 +9,6 @@ export default class APipeline implements IPipeline{
   private pipeline!: GPURenderPipeline
 
   private textureBindGroup!: GPUBindGroup
-  private testTexture!: Texture
 
   private positionsBuffer!: GPUBuffer
   private colorsBuffer!: GPUBuffer
@@ -23,7 +21,6 @@ export default class APipeline implements IPipeline{
 
   async initialize(device: GPUDevice) {
     this.device = device
-    this.testTexture = await Texture.createTextureFromUrl(this.device, 'assets/cat-head.jpg')
 
     const shaderModule = this.device.createShaderModule({
       code: aShader
@@ -77,16 +74,17 @@ export default class APipeline implements IPipeline{
       ]
     })
 
+    const {texture, sampler} = await Renderer.createTexture(this.device, await loadImage('assets/cat-head.jpg'))
     this.textureBindGroup = this.device.createBindGroup({
       layout: textureBindGroupLayout,
       entries: [
         {
           binding: 0,
-          resource: this.testTexture.sampler
+          resource: sampler
         },
         {
           binding: 1,
-          resource: this.testTexture.texture.createView()
+          resource: texture.createView()
         }
       ]
     })
@@ -117,10 +115,10 @@ export default class APipeline implements IPipeline{
 
     const geometry = new QuadGeometry()
 
-    this.positionsBuffer = BufferUtils.createVertexBuffer(this.device, new Float32Array(geometry.positions))
-    this.colorsBuffer = BufferUtils.createVertexBuffer(this.device, new Float32Array(geometry.colors))
-    this.texCoordsBuffer = BufferUtils.createVertexBuffer(this.device, new Float32Array(geometry.texCoords))
-    this.indexBuffer = BufferUtils.createIndexBuffer(this.device, new Uint16Array(geometry.indices))
+    this.positionsBuffer = Renderer.createVertexBuffer(this.device, new Float32Array(geometry.positions))
+    this.colorsBuffer = Renderer.createVertexBuffer(this.device, new Float32Array(geometry.colors))
+    this.texCoordsBuffer = Renderer.createVertexBuffer(this.device, new Float32Array(geometry.texCoords))
+    this.indexBuffer = Renderer.createIndexBuffer(this.device, new Uint16Array(geometry.indices))
   }
 
   draw(passEncoder: GPURenderPassEncoder) {

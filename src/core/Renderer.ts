@@ -1,6 +1,4 @@
-import IPipeline from './IPipeline'
-
-export default class Renderer {
+export class Renderer {
 
   format: GPUTextureFormat
 
@@ -69,6 +67,58 @@ export default class Renderer {
 
     this.device.queue.submit([commandEncoder.finish()])
   }
-  
+
+  static createBuffer<T extends ArrayBuffer>(device: GPUDevice, usage: number, data: T): GPUBuffer {
+    const buffer = device.createBuffer({
+      size: data.byteLength,
+      usage
+    })
+    device.queue.writeBuffer(buffer, 0, data)
+    return buffer
+  }
+
+  static createVertexBuffer<T extends ArrayBuffer>(device: GPUDevice, data: T): GPUBuffer {
+    const buffer = device.createBuffer({
+      size: data.byteLength,
+      usage:  GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+    })
+    device.queue.writeBuffer(buffer, 0, data)
+    return buffer
+  }
+
+  static createIndexBuffer<T extends ArrayBuffer>(device: GPUDevice, data: T): GPUBuffer {
+    const buffer = device.createBuffer({
+      size: data.byteLength,
+      usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
+    })
+    device.queue.writeBuffer(buffer, 0, data)
+    return buffer
+  }
+
+  static async createTexture(device: GPUDevice, image: HTMLImageElement)
+  : Promise<{texture: GPUTexture, sampler: GPUSampler}> {
+    const texture = device.createTexture({
+      size: {width: image.width, height: image.height},
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
+    })
+    const data = await createImageBitmap(image)
+    device.queue.copyExternalImageToTexture(
+      {source: data},
+      {texture},
+      {width: image.width, height: image.height}
+    )
+    const sampler = device.createSampler({
+      magFilter: 'linear',
+      minFilter: 'linear',
+    })
+    return {texture, sampler}
+  }
+
+
 }
 
+export interface IPipeline {
+  initialize(device: GPUDevice): Promise<void>
+  draw(passEncoder: GPURenderPassEncoder): void
+}
