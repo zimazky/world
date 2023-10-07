@@ -7,7 +7,7 @@ function onKeyDown(e: KeyboardEvent) {
   if(e.keyCode >= KEYBUFFER_SIZE) return;
   keyDownBuffer[e.keyCode] = 1;
   keyPressBuffer[e.keyCode] = 1;
-  console.log(e.keyCode, e.code, keyPressBuffer);
+  //console.log(e.keyCode, e.code, keyPressBuffer);
   e.preventDefault();
 }
 

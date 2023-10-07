@@ -10,6 +10,8 @@ export default class Engine {
   renderer: Renderer
   renderPasses: IRenderPass[] = []
 
+  camera!: Camera
+
   /** Время запуска программы */
   startTime: number = 0
   /** Текущее время */
@@ -17,7 +19,7 @@ export default class Engine {
   /** Счетчик кадров */
   frame: number = 0
   /** Признак запущенного цикла анимации */
-  running: boolean = false
+  running: boolean = true
   /** Время, когда должен обновиться информационный блок */
   infoRefreshTime = 0
 
@@ -45,8 +47,8 @@ export default class Engine {
     await this.renderer.initialize()
     const canvas = this.renderer.context.canvas
     const size = {width: canvas.width, height: canvas.height}
-    const camera = new Camera(size.width/size.height)
-    const renderPass = new IcosahedronRenderPass(camera)
+    this.camera = new Camera(size.width/size.height)
+    const renderPass = new IcosahedronRenderPass(this.camera)
     await this.addRenderPass(renderPass)
 
     this.startTime = this.currentTime = performance.now()/1000.
@@ -65,11 +67,13 @@ export default class Engine {
     this.renderPasses.forEach(p=>p.render(commandEncoder, time, dt))
     this.renderer.device.queue.submit([commandEncoder.finish()])
 
+    this.camera.update(time, dt)
+
     const canvas = this.renderer.context.canvas
 
     if(time>this.infoRefreshTime) {
       this.divinfo.innerText = 
-        `dt: ${dt.toFixed(2)} fps: ${(1000/dt).toFixed(2)} 
+        `dt: ${(1000*dt).toFixed(2)} fps: ${(1/dt).toFixed(2)} 
         ${canvas.width} x ${canvas.height}`
       this.infoRefreshTime = time + 0.5
     }

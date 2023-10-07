@@ -1,7 +1,7 @@
 import shader from 'src/shaders/icosahedron.wgsl'
 import { Renderer } from 'src/core/Renderer'
 import Icosahedron from './Icosahedron'
-import { Mat4, Vec3 } from 'src/shared/libs/Vectors/Vectors'
+import { Mat4, Quaternion, Vec3 } from 'src/shared/libs/Vectors/Vectors'
 import Camera from 'src/core/Camera'
 import { IRenderPass } from 'src/core/Engine'
 
@@ -108,10 +108,11 @@ export default class IcosahedronRenderPass implements IRenderPass{
 
     const device = this.renderer.device
 
-    this.mvpMatrix = Mat4.ID
-      .translate(new Vec3(0, 0, -3))
-      .rotate(Vec3.J, 0.1*time)
-      .scale(Vec3.ONE.mulMutable(1))
+    const orientation = Quaternion.ID
+    const position = new Vec3(0, 0, -3)
+    const modelMatrix = Mat4.modelFromQuatPosition(orientation, position)
+    this.mvpMatrix = modelMatrix
+      .mulMatLeft(this.camera.viewMatrix)
       .mulMatLeft(this.camera.projectionMatrix)
     device.queue.writeBuffer(this.uniformBuffer, 0, this.mvpMatrix.getFloat32Array())
 
