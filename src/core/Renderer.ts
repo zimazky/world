@@ -2,9 +2,9 @@ export class Renderer {
 
   format: GPUTextureFormat
 
-  private context: GPUCanvasContext
+  context: GPUCanvasContext
   private device!: GPUDevice
-  private pipelines: IPipeline[] = []
+  private pipelines: IRenderPass[] = []
 
   constructor(canvas: HTMLCanvasElement) {
     const context = canvas.getContext('webgpu')
@@ -43,28 +43,17 @@ export class Renderer {
     this.device = device
   }
 
-  async addPipelineAsync(pipeline: IPipeline) {
+  async addPipelineAsync(pipeline: IRenderPass) {
     this.pipelines.push(pipeline)
     await pipeline.initialize(this.device)
   }
 
-  public render() {
+  public render(time: number) {
     const commandEncoder = this.device.createCommandEncoder()
-    const textureView = this.context.getCurrentTexture().createView()
-    const renderPassDescriptor: GPURenderPassDescriptor = {
-      colorAttachments: [{
-        view: textureView,
-        clearValue: { r: 0, g: 0, b: 0, a: 1},
-        loadOp: 'clear',
-        storeOp: 'store'
-      }]
-    }
-    const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
-    
+    //const textureView = this.context.getCurrentTexture().createView()
+   
     // todo: draw
-    this.pipelines.forEach(p=>p.draw(passEncoder))
-    passEncoder.end()
-
+    this.pipelines.forEach(p=>p.draw(commandEncoder, this.context, time))
     this.device.queue.submit([commandEncoder.finish()])
   }
 
@@ -128,7 +117,7 @@ export class Renderer {
 
 }
 
-export interface IPipeline {
+export interface IRenderPass {
   initialize(device: GPUDevice): Promise<void>
-  draw(passEncoder: GPURenderPassEncoder): void
+  draw(commandEncoder: GPUCommandEncoder, context: GPUCanvasContext, time: number): void
 }

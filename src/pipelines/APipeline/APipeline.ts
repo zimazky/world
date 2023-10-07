@@ -1,9 +1,9 @@
 import aShader from 'src/shaders/a.wgsl'
 import QuadGeometry from './QuadGeometry'
-import { IPipeline, Renderer } from 'src/core/Renderer'
+import { IRenderPass, Renderer } from 'src/core/Renderer'
 import { loadImage } from 'src/shared/utils/loadimg'
 
-export default class APipeline implements IPipeline{
+export default class APipeline {//} implements IPipeline{
   private device!: GPUDevice
   private format: GPUTextureFormat
   private pipeline!: GPURenderPipeline

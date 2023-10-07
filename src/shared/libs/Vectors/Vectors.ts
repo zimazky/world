@@ -489,7 +489,7 @@ export class Mat4 implements IMatrixes<Mat4, Vec4> {
   /** Tested
    * Получить матрицу перспективной проекции DirectX/WebGPU/Vulkan/Metal
    * соответствующую области отсечения по z в интервале 0...1
-   * @param fovy - величина угла поля зрения по горизонтали в радианах
+   * @param fovy - величина угла поля зрения по вертикали в радианах
    * @param aspect - соотношение сторон (ширина/высота)
    * @param near - расстояние до ближней плоскости отсечения, должно быть больше 0
    * @param far - расстояние до дальней плоскости отсечения, должно быть больше 0
@@ -702,6 +702,18 @@ export class Mat4 implements IMatrixes<Mat4, Vec4> {
     a.l.z += a.i.z * v.x + a.j.z * v.y + a.k.z * v.z;
     return a;
   }
+  /**
+   * Операция масштабирования матрицы на вектор масштабирования по осям
+   * @param v - вектор масштабирования
+   */
+  scale(v: Vec3): Mat4 {
+    const a = this.copy();
+    a.i.mulMutable(v.x);
+    a.j.mulMutable(v.y);
+    a.k.mulMutable(v.z);
+    return a;
+  }
+  
   /**
    * Получить матрицу после операции вращения над текущей матрицей
    * @param axis - ось вращения

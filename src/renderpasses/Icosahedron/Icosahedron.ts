@@ -4,6 +4,8 @@ export default class Icosahedron {
   colors: number[]
   triangles = 20
   constructor() {
+
+
 		const t = (1.0 + Math.sqrt(5.0)) / 2.0
 		this.verticies = [ 
 			-1, t, 0,
@@ -20,7 +22,28 @@ export default class Icosahedron {
       -t, 0, 1
     ]
 
-    this.colors = this.verticies.map(v => 0.5 * (v + 1))
+
+/*
+    const phi = (1.0 + Math.sqrt(5.0)) / 2.0
+    const du = 1.0 / Math.sqrt(phi * phi + 1.0)
+    const dv = phi * du;
+    
+    this.verticies = [
+      0, +dv, +du,
+      0, +dv, -du,
+      0, -dv, +du,
+      0, -dv, -du,
+      +du, 0, +dv,
+      -du, 0, +dv,
+      +du, 0, -dv,
+      -du, 0, -dv,
+      +dv, +du, 0,
+      +dv, -du, 0,
+      -dv, +du, 0,
+      -dv, -du, 0,
+    ]
+    */
+    this.colors = this.verticies.map(v => 0.5 * (v + 0))
 
 		this.indicies = [ 
 			0, 11, 5,

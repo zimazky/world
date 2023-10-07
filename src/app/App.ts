@@ -1,6 +1,7 @@
 import { Renderer } from 'src/core/Renderer'
 import { initKeyBuffer } from 'src/shared/libs/Keyboard'
-import IcosahedronPipeline from 'src/pipelines/Icosahedron/IcosahedronPipeline'
+import IcosahedronPipeline from 'src/renderpasses/Icosahedron/IcosahedronPipeline'
+import Camera from 'src/renderpasses/Icosahedron/Camera'
 
 export default class App {
   canvas: HTMLCanvasElement
@@ -35,7 +36,9 @@ export default class App {
   async initialize() {
     this.renderer = new Renderer(this.canvas)
     await this.renderer.initialize()
-    const pipeline = new IcosahedronPipeline(this.renderer.format)
+    const size = {width: this.canvas.width, height: this.canvas.height}
+    const camera = new Camera(size.width/size.height)
+    const pipeline = new IcosahedronPipeline(this.renderer.format, camera, size)
     await this.renderer.addPipelineAsync(pipeline)
 
 
@@ -56,7 +59,7 @@ export default class App {
       this.infoRefreshTime = time + 0.5
     }
 
-    this.renderer.render()
+    this.renderer.render(time)
 
     if(this.running) {
         requestAnimationFrame(this.run)
