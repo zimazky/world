@@ -95,6 +95,16 @@ export class Renderer {
     return buffer
   }
 
+  static createUniformBuffer<T extends ArrayBuffer>(device: GPUDevice, data: T): GPUBuffer {
+    const buffer = device.createBuffer({
+      size: data.byteLength,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    })
+    device.queue.writeBuffer(buffer, 0, data)
+    return buffer
+  }
+
+
   static async createTexture(device: GPUDevice, image: HTMLImageElement)
   : Promise<{texture: GPUTexture, sampler: GPUSampler}> {
     const texture = device.createTexture({

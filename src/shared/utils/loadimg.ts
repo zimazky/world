@@ -3,7 +3,9 @@ export function loadImage(url: string): Promise<HTMLImageElement> {
     const image = new Image()
     image.onload = () => resolve(image);
     image.onerror = () => {
-      console.error(`Failed to load image ${url}`)
+      const msg = `Failed to load image ${url}`
+      alert(msg)
+      console.error(msg)
       reject()
     }
     image.src = url

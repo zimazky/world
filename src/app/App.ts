@@ -1,6 +1,6 @@
-import APipeline from 'src/pipelines/APipeline/APipeline'
 import { Renderer } from 'src/core/Renderer'
 import { initKeyBuffer } from 'src/shared/libs/Keyboard'
+import IcosahedronPipeline from 'src/pipelines/Icosahedron/IcosahedronPipeline'
 
 export default class App {
   canvas: HTMLCanvasElement
@@ -35,7 +35,7 @@ export default class App {
   async initialize() {
     this.renderer = new Renderer(this.canvas)
     await this.renderer.initialize()
-    const pipeline = new APipeline(this.renderer.format)
+    const pipeline = new IcosahedronPipeline(this.renderer.format)
     await this.renderer.addPipelineAsync(pipeline)
 
 
