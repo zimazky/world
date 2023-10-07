@@ -1,11 +1,13 @@
 
 const KEYBUFFER_SIZE = 256;
 const keyDownBuffer = Array<number>(KEYBUFFER_SIZE).fill(0);
+const keyPressBuffer = Array<number>(KEYBUFFER_SIZE).fill(0);
 
 function onKeyDown(e: KeyboardEvent) {
   if(e.keyCode >= KEYBUFFER_SIZE) return;
   keyDownBuffer[e.keyCode] = 1;
-  //console.log(e.keyCode, e.code);
+  keyPressBuffer[e.keyCode] = 1;
+  console.log(e.keyCode, e.code, keyPressBuffer);
   e.preventDefault();
 }
 
@@ -21,8 +23,8 @@ export function initKeyBuffer() {
 }
 
 export function isKeyPress(k: number) {
-  const s = keyDownBuffer[k];
-  keyDownBuffer[k] = 0;
+  const s = keyPressBuffer[k];
+  keyPressBuffer[k] = 0;
   return s;
 }
 

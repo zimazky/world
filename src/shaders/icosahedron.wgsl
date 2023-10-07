@@ -19,5 +19,7 @@ fn vertexMain(
 
 @fragment
 fn fragmentMain(fragData: VertexOut) -> @location(0) vec4f {
-  return vec4f(0.5*normalize(fragData.fragPosition.xyz)+0.5, 1);
+  //return vec4f(0.5*normalize(fragData.fragPosition.xyz*fragData.color.rgb)+0.5, 1);
+  return vec4f(fragData.color.rgb, 1);
+
 }

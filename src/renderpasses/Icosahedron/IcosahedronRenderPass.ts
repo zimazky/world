@@ -1,38 +1,39 @@
 import shader from 'src/shaders/icosahedron.wgsl'
-import { IRenderPass, Renderer } from 'src/core/Renderer'
+import { Renderer } from 'src/core/Renderer'
 import Icosahedron from './Icosahedron'
 import { Mat4, Vec3 } from 'src/shared/libs/Vectors/Vectors'
-import Camera from './Camera'
+import Camera from 'src/core/Camera'
+import { IRenderPass } from 'src/core/Engine'
 
-export default class IcosahedronPipeline implements IRenderPass{
+export default class IcosahedronRenderPass implements IRenderPass{
   private camera: Camera
-  private size: {width: number, height: number}
+  private size!: {width: number, height: number}
 
-  private device!: GPUDevice
-  private format: GPUTextureFormat
+  private renderer!: Renderer
   private pipeline!: GPURenderPipeline
 
   private positionsBuffer!: GPUBuffer
   private colorsBuffer!: GPUBuffer
   private indexBuffer!: GPUBuffer
   private triangles: number = 20
-  private mvpMatrix: Mat4 = Mat4.ID.mul(0.5)
+  private mvpMatrix: Mat4 = Mat4.ID
   private uniformBuffer!: GPUBuffer
   private uniformGroup!: GPUBindGroup
 
   private depthTexture!: GPUTexture
-  private outTexture: GPUTexture | null = null
 
-  constructor(format: GPUTextureFormat, camera: Camera, size: {width: number, height: number}) {
-    this.format = format
+  constructor(camera: Camera) {
     this.camera = camera
-    this.size = size
   }
 
-  async initialize(device: GPUDevice) {
-    this.device = device
+  async initialize(renderer: Renderer) {
+    this.renderer = renderer
+    const canvas = renderer.context.canvas
+    this.size = {width: canvas.width, height: canvas.height}
 
-    const shaderModule = this.device.createShaderModule({
+    const device = renderer.device
+
+    const shaderModule = device.createShaderModule({
       code: shader
     })
     const positionBufferLayout: GPUVertexBufferLayout = {
@@ -54,7 +55,7 @@ export default class IcosahedronPipeline implements IRenderPass{
       stepMode: 'vertex'
     }
 
-    this.pipeline = await this.device.createRenderPipelineAsync({
+    this.pipeline = await device.createRenderPipelineAsync({
       vertex: {
         module: shaderModule,
         entryPoint: 'vertexMain',
@@ -67,14 +68,15 @@ export default class IcosahedronPipeline implements IRenderPass{
         module: shaderModule,
         entryPoint: 'fragmentMain',
         targets: [{
-          format: this.format
+          format: this.renderer.format
         }]
       },
       primitive: {
-        topology: 'triangle-list'
+        topology: 'triangle-list',
+        cullMode: 'back'
       },
       depthStencil: {
-        depthWriteEnabled: true,
+        depthWriteEnabled: false,
         depthCompare: 'less',
         format: 'depth24plus'
       },
@@ -86,46 +88,36 @@ export default class IcosahedronPipeline implements IRenderPass{
 
     const geometry = new Icosahedron()
 
-    this.positionsBuffer = Renderer.createVertexBuffer(this.device, new Float32Array(geometry.verticies))
-    this.colorsBuffer = Renderer.createVertexBuffer(this.device, new Float32Array(geometry.colors))
-    this.indexBuffer = Renderer.createIndexBuffer(this.device, new Uint16Array(geometry.indicies))
+    this.positionsBuffer = Renderer.createVertexBuffer(device, new Float32Array(geometry.verticies))
+    this.colorsBuffer = Renderer.createVertexBuffer(device, new Float32Array(geometry.colors))
+    this.indexBuffer = Renderer.createIndexBuffer(device, new Uint16Array(geometry.indicies))
 
-    this.mvpMatrix = Mat4.ID
-      .translate(new Vec3(0, 0, -3))
-      .rotate(Vec3.J, -1.5)
-      .scale(Vec3.ONE.mulMutable(1))
-      .mulMatLeft(this.camera.projectionMatrix)
+    this.uniformBuffer = Renderer.createUniformBuffer(device, this.mvpMatrix.getFloat32Array())
 
-    this.uniformBuffer = Renderer.createUniformBuffer(this.device, this.mvpMatrix.getFloat32Array())
-
-
-    this.uniformGroup = this.device.createBindGroup({
+    this.uniformGroup = device.createBindGroup({
       layout: this.pipeline.getBindGroupLayout(0),
-      entries: [
-        {
-          binding: 0,
-          resource: { buffer: this.uniformBuffer }
-        }
-      ]
+      entries: [{
+        binding: 0,
+        resource: { buffer: this.uniformBuffer }
+      }]
     })
 
   }
 
-  draw(commandEncoder: GPUCommandEncoder, context: GPUCanvasContext, time: number) {
+  render(commandEncoder: GPUCommandEncoder, time: number, timeDelta: number) {
+
+    const device = this.renderer.device
 
     this.mvpMatrix = Mat4.ID
       .translate(new Vec3(0, 0, -3))
       .rotate(Vec3.J, 0.1*time)
       .scale(Vec3.ONE.mulMutable(1))
       .mulMatLeft(this.camera.projectionMatrix)
-    this.device.queue.writeBuffer(this.uniformBuffer, 0, this.mvpMatrix.getFloat32Array())
-
-    let texture = this.outTexture
-    if(!texture) texture = context.getCurrentTexture()
+    device.queue.writeBuffer(this.uniformBuffer, 0, this.mvpMatrix.getFloat32Array())
 
     const renderPassDescriptor: GPURenderPassDescriptor = {
       colorAttachments: [{
-        view: texture.createView(),
+        view: this.renderer.context.getCurrentTexture().createView(),
         clearValue: { r: 0, g: 0, b: 0, a: 1},
         loadOp: 'clear',
         storeOp: 'store'
@@ -138,7 +130,6 @@ export default class IcosahedronPipeline implements IRenderPass{
       }
     }
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
-    
 
     passEncoder.setPipeline(this.pipeline)
     passEncoder.setIndexBuffer(this.indexBuffer, 'uint16')

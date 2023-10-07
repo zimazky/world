@@ -3,8 +3,7 @@ export class Renderer {
   format: GPUTextureFormat
 
   context: GPUCanvasContext
-  private device!: GPUDevice
-  private pipelines: IRenderPass[] = []
+  device!: GPUDevice
 
   constructor(canvas: HTMLCanvasElement) {
     const context = canvas.getContext('webgpu')
@@ -41,20 +40,6 @@ export class Renderer {
     //console.log(this.device)
     //adapter.features.forEach(f=>console.log(f))
     this.device = device
-  }
-
-  async addPipelineAsync(pipeline: IRenderPass) {
-    this.pipelines.push(pipeline)
-    await pipeline.initialize(this.device)
-  }
-
-  public render(time: number) {
-    const commandEncoder = this.device.createCommandEncoder()
-    //const textureView = this.context.getCurrentTexture().createView()
-   
-    // todo: draw
-    this.pipelines.forEach(p=>p.draw(commandEncoder, this.context, time))
-    this.device.queue.submit([commandEncoder.finish()])
   }
 
   static createBuffer<T extends ArrayBuffer>(device: GPUDevice, usage: number, data: T): GPUBuffer {
@@ -117,7 +102,3 @@ export class Renderer {
 
 }
 
-export interface IRenderPass {
-  initialize(device: GPUDevice): Promise<void>
-  draw(commandEncoder: GPUCommandEncoder, context: GPUCanvasContext, time: number): void
-}

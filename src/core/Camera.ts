@@ -1,4 +1,4 @@
-import { Mat4 } from "src/shared/libs/Vectors/Vectors";
+import { Mat4 } from 'src/shared/libs/Vectors/Vectors'
 
 export default class Camera {
   projectionMatrix: Mat4
